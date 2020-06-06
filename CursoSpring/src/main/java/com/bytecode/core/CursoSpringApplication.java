@@ -1,42 +1,40 @@
 package com.bytecode.core;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.jdbc.core.JdbcTemplate;
 
-import com.bytecode.core.components.PostComponent;
-import com.bytecode.core.model.Conexion;
-import com.bytecode.core.services.PostService;
 
 @SpringBootApplication
-public class CursoSpringApplication implements CommandLineRunner{
-	
+public class CursoSpringApplication implements CommandLineRunner {
+
 	@Autowired
-	@Qualifier("beanConexion")
-	private Conexion conexion;
-	
-	@Autowired
-	@Qualifier("com.bytecode.core.components.PostComponent")
-	public PostComponent postComponent;
-	
-	
-	public PostService postService;
-	
-	public PostService getPostService() {
-		return postService;
-	}
-	
-	@Autowired
-	public CursoSpringApplication(@Qualifier("serviceDecorado") PostService postService) {
-		this.postService = postService;
+	private JdbcTemplate jdbcTemplate;
+
+	@Value("${cursospring.jdbc.import.ruta}")
+	private String ruta;
+
+	@Value("${cursospring.jdbc.import}")
+	private String importar;
+
+	public CursoSpringApplication() {
+
 	}
 
-	
-	
+	Log log = LogFactory.getLog(getClass());
+
 	public static void main(String[] args) {
 		SpringApplication.run(CursoSpringApplication.class, args);
 	}
@@ -44,28 +42,24 @@ public class CursoSpringApplication implements CommandLineRunner{
 	@Override
 	public void run(String... args) throws Exception {
 		// TODO Auto-generated method stub
-		Log log = LogFactory.getLog(getClass());
-			
-		try {
-			
-			log.info(conexion.getDb());
-			log.info(conexion.getUrl());
-			
-			postComponent.getPosts().forEach(p ->{
-				//System.out.println(p.getDescripcion());
-				log.info(p.getDescripcion());
-			});
-			
-			postService.validation(postComponent.getPosts()).forEach((post) -> {
-				//System.out.println(post.getTitulo());
-				log.info(post.getTitulo());
-			});
-			
-		} catch (NullPointerException e) {
-			// TODO: handle exception
-			//System.out.println(e.getMessage());
-			log.error(e);
+
+		if (importar.equalsIgnoreCase("true")) {
+			Path path = Paths.get(ruta);
+
+			try (BufferedReader bufferedReader = Files.newBufferedReader(path, Charset.forName("UTF-8"))) {
+				String line;
+
+				while ((line = bufferedReader.readLine()) != null) {
+					jdbcTemplate.execute(line);
+				}
+
+			} catch (IOException ex) {
+				// TODO: handle exception
+			}
 		}
+
+		log.info("Tenemos esta cantidad de permisos: "
+				+ jdbcTemplate.queryForObject("SELECT count(*) FROM blog.permiso;", Integer.class));
 	}
 
 }

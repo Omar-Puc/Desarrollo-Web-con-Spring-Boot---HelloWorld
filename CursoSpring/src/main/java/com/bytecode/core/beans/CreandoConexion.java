@@ -1,6 +1,9 @@
 package com.bytecode.core.beans;
 
+import javax.sql.DataSource;
+
 import org.springframework.context.annotation.Bean;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Component;
 
 import com.bytecode.core.model.Conexion;
@@ -18,10 +21,21 @@ public class CreandoConexion {
 	@Bean(name="beanConexion")
 	public Conexion getConexion() {
 		Conexion conexion = new Conexion();
-		conexion.setDb("MYSQL");
+		conexion.setDb("mysql");
 		conexion.setUrl("localhost");
 		
 		return conexion;
+	}
+	
+	@Bean
+	public DataSource getDataSource() {
+		DriverManagerDataSource dataSource = new DriverManagerDataSource();
+		dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+		dataSource.setUrl("jdbc:mysql://localhost:3306/blog?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC");
+		dataSource.setUsername("FerGoo");
+		dataSource.setPassword("omar123");
+		
+		return dataSource;
 	}
 	
 }
